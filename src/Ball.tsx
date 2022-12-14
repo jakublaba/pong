@@ -1,15 +1,15 @@
 import {GameEnv} from "./enums/GameEnv";
 
-export const Ball = ({params} : {params: any}) => {
+export const Ball = ({params} : {params: {x: number, y: number, vx: number, vy: number}}) => {
     let {x, y} = params
     const ballStyle: {} = {
         position: "absolute",
         left: x,
-        bottom: y,
+        top: y,
         backgroundColor: "red",
         width: `${GameEnv.BallSize}px`,
         height: `${GameEnv.BallSize}px`,
-        borderRadius: "25px" // TODO - figure out how to calculate this based on ball size
+        borderRadius: `${GameEnv.BallSize}px`
     };
     return (<div style={ballStyle}/>);
 }

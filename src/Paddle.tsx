@@ -1,6 +1,6 @@
 import {GameEnv} from "./enums/GameEnv";
 
-export const Paddle = ({x, y} : {x: number, y: number}) => {
+export function Paddle({x, y}: {x: number, y: number}) {
     const paddleStyle: {} = {
         position: "absolute",
         left: x,
