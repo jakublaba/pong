@@ -6,12 +6,10 @@ import {Field} from "./Field";
 import {Paddle} from "./Paddle";
 import {Ball} from "./Ball";
 
-export default function App() {
+export const App = () => {
     let [leftPaddle, setLeftPaddle] = useState({pos: GameEnv.PaddleStartY});
     let [rightPaddle, setRightPaddle] = useState({pos: GameEnv.PaddleStartY});
-    let [ballParams, setBallParams] = useState(
-        {x: GameEnv.BallStartX, y: GameEnv.BallStartY, vx: 1, vy: 1}
-    );
+    let [ballParams, setBallParams] = useState({x: GameEnv.BallStartX, y: GameEnv.BallStartY, vx: 1, vy: 1});
     let [score, setScore] = useState({leftPlayer: 0, rightPlayer: 0});
     let [gameStarted, setGameStarted] = useState(false);
     let [pause, setPause] = useState(false);
@@ -19,13 +17,8 @@ export default function App() {
     let [seconds, setSeconds] = useState({val: 0, incr: 1});
 
     useEffect(() => {
-        if (!gameStarted) {
+        if (!gameStarted || pause) {
             return () => {};
-        } else if (pause) {
-            return () => {
-                clearInterval(gameLoopId.ref());
-                clearInterval(timerId.ref());
-            }
         }
 
         const gameLoop = () => {
@@ -71,6 +64,16 @@ export default function App() {
             setScore({...score});
         };
 
+        const updateTimer = () => {
+            seconds.val += seconds.incr;
+            if (seconds.val >= 60) {
+                minutes.val += minutes.incr;
+                seconds.val = 0;
+            }
+            setSeconds({...seconds});
+            setMinutes({...minutes});
+        };
+
         const keyPress = (key: KeyboardEvent) => {
             console.log(`Key pressed: ${key.code}`)
             switch (key.code) {
@@ -103,16 +106,6 @@ export default function App() {
                     break;
                 }
             }
-        }
-
-        const updateTimer = () => {
-            seconds.val += seconds.incr;
-            if (seconds.val >= 60) {
-                minutes.val += minutes.incr;
-                seconds.val = 0;
-            }
-            setSeconds({...seconds});
-            setMinutes({...minutes});
         };
 
         document.addEventListener("keydown", keyPress);
@@ -122,7 +115,8 @@ export default function App() {
             clearInterval(gameLoopId);
             clearInterval(timerId);
         };
-    }, [gameStarted]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [gameStarted, pause]);
 
     const startBtn = () => {
         console.log(`${gameStarted ? "restart" : "start"} clicked`);
@@ -136,6 +130,7 @@ export default function App() {
         console.log(`${pause ? "unpause" : "pause"} clicked`);
         setPause(!pause);
     }
+
     return (
         <div className="App">
             <div>
