@@ -13,8 +13,8 @@ export const App = () => {
     let [score, setScore] = useState({leftPlayer: 0, rightPlayer: 0});
     let [gameStarted, setGameStarted] = useState(false);
     let [pause, setPause] = useState(false);
-    let [minutes, setMinutes] = useState({val: 0, incr: 1});
-    let [seconds, setSeconds] = useState({val: 0, incr: 1});
+    let [minutes, setMinutes] = useState(0);
+    let [seconds, setSeconds] = useState(0);
 
     useEffect(() => {
         if (!gameStarted || pause) {
@@ -65,13 +65,12 @@ export const App = () => {
         };
 
         const updateTimer = () => {
-            seconds.val += seconds.incr;
-            if (seconds.val >= 60) {
-                minutes.val += minutes.incr;
-                seconds.val = 0;
+            if (++seconds >= 60) {
+                minutes++;
+                seconds = 0;
             }
-            setSeconds({...seconds});
-            setMinutes({...minutes});
+            setSeconds(seconds);
+            setMinutes(minutes);
         };
 
         const keyPress = (key: KeyboardEvent) => {
@@ -143,7 +142,7 @@ export const App = () => {
                 {score.leftPlayer} : {score.rightPlayer}
             </div>
             <div style={{textAlign: "center"}}>
-                {minutes.val < 10 ? `0${minutes.val}` : minutes.val}:{seconds.val < 10 ? `0${seconds.val}` : seconds.val}
+                {minutes < 10 ? `0${minutes}` : minutes}:{seconds < 10 ? `0${seconds}` : seconds}
             </div>
             <button onClick={startBtn}>{gameStarted ? "Restart" : "Start"}</button>
             <button onClick={pauseBtn}>{pause ? "Unpause" : "Pause"}</button>
