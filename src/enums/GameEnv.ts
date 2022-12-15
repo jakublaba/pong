@@ -10,5 +10,5 @@ export enum GameEnv {
     BallSize = 10, // diameter
     BallStartX = FieldWidth / 2,
     BallStartY = FieldHeight / 2,
-    BallV = -1,
+    BallV = 100,
 }

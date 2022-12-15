@@ -5,64 +5,72 @@ import {GameEnv} from "./enums/GameEnv";
 import {Field} from "./Field";
 import {Paddle} from "./Paddle";
 import {Ball} from "./Ball";
-import {Simulate} from "react-dom/test-utils";
 
-// TODO - export magic numbers to some enum for readability
 export default function App() {
     let [leftPaddle, setLeftPaddle] = useState({pos: GameEnv.PaddleStartY});
     let [rightPaddle, setRightPaddle] = useState({pos: GameEnv.PaddleStartY});
     let [ballParams, setBallParams] = useState(
-        {x: GameEnv.BallStartX, y: GameEnv.BallStartY, vx: GameEnv.BallV, vy: GameEnv.BallV}
+        {x: GameEnv.BallStartX, y: GameEnv.BallStartY, vx: 1, vy: 1}
     );
     let [score, setScore] = useState({leftPlayer: 0, rightPlayer: 0});
-
-    // cartesian coordinates, 0 in top left corner, x increments left to right, y - top to bottom
-    const gameLoop = () => {
-        // check for bounce off left paddle
-        if (ballParams.y >= leftPaddle.pos && ballParams.y <= leftPaddle.pos + GameEnv.PaddleHeight
-            && ballParams.x <= GameEnv.PaddleWidth) {
-            console.log(`LEFT PADDLE:(${leftPaddle.pos})`)
-            ballParams.vx *= -1;
-        }
-        // check for bounce off left wall
-        else if (ballParams.x <= 0) {
-            console.log(`LEFT WALL: BALL:(${ballParams.x}, ${ballParams.y}, ${ballParams.vx}, ${ballParams.vy})`)
-            ballParams.vx *= -1;
-            score.rightPlayer++;
-        }
-
-        // check for bounce off right paddle
-        if (ballParams.y >= rightPaddle.pos && ballParams.y <= rightPaddle.pos + GameEnv.PaddleHeight
-            && ballParams.x >= GameEnv.FieldWidth - (GameEnv.PaddleWidth + GameEnv.BallSize)) {
-            console.log(`RIGHT PADDLE:(${rightPaddle.pos})`)
-            ballParams.vx *= -1;
-        }
-        // check for bounce off right wall
-        else if (ballParams.x >= GameEnv.FieldWidth - GameEnv.BallSize) {
-            console.log(`RIGHT WALL: BALL:(${ballParams.x}, ${ballParams.y}, ${ballParams.vx}, ${ballParams.vy})`)
-            ballParams.vx *= -1;
-            score.leftPlayer++;
-        }
-
-        // check for bounce off top border
-        if (ballParams.y <= 0) {
-            console.log(`TOP WALL: BALL:(${ballParams.x}, ${ballParams.y}, ${ballParams.vx}, ${ballParams.vy})`)
-            ballParams.vy *= -1;
-        }
-        // check for bounce off bottom wall
-        if (ballParams.y >= GameEnv.FieldHeight - GameEnv.BallSize) {
-            console.log(`BOTTOM WALL: BALL:(${ballParams.x}, ${ballParams.y}, ${ballParams.vx}, ${ballParams.vy})`)
-            ballParams.vy *= -1;
-        }
-        ballParams.x += ballParams.vx;
-        ballParams.y += ballParams.vy;
-        setBallParams({...ballParams});
-        setScore({...score});
-    };
-
-
+    let [gameStarted, setGameStarted] = useState(false);
+    let [pause, setPause] = useState(false);
+    let [minutes, setMinutes] = useState({val: 0, incr: 1});
+    let [seconds, setSeconds] = useState({val: 0, incr: 1});
 
     useEffect(() => {
+        if (!gameStarted) {
+            return () => {};
+        } else if (pause) {
+            return () => {
+                clearInterval(gameLoopId.ref());
+                clearInterval(timerId.ref());
+            }
+        }
+
+        const gameLoop = () => {
+            // check for bounce off left paddle
+            if (ballParams.y >= leftPaddle.pos && ballParams.y <= leftPaddle.pos + GameEnv.PaddleHeight
+                && ballParams.x <= GameEnv.PaddleWidth) {
+                console.log(`LEFT PADDLE:(${leftPaddle.pos})`)
+                ballParams.vx *= -1;
+            }
+            // check for bounce off left wall
+            else if (ballParams.x <= 0) {
+                console.log(`LEFT WALL: BALL:(${ballParams.x}, ${ballParams.y}, ${ballParams.vx}, ${ballParams.vy})`)
+                ballParams.vx *= -1;
+                score.rightPlayer++;
+            }
+
+            // check for bounce off right paddle
+            if (ballParams.y >= rightPaddle.pos && ballParams.y <= rightPaddle.pos + GameEnv.PaddleHeight
+                && ballParams.x >= GameEnv.FieldWidth - (GameEnv.PaddleWidth + GameEnv.BallSize)) {
+                console.log(`RIGHT PADDLE:(${rightPaddle.pos})`)
+                ballParams.vx *= -1;
+            }
+            // check for bounce off right wall
+            else if (ballParams.x >= GameEnv.FieldWidth - GameEnv.BallSize) {
+                console.log(`RIGHT WALL: BALL:(${ballParams.x}, ${ballParams.y}, ${ballParams.vx}, ${ballParams.vy})`)
+                ballParams.vx *= -1;
+                score.leftPlayer++;
+            }
+
+            // check for bounce off top border
+            if (ballParams.y <= 0) {
+                console.log(`TOP WALL: BALL:(${ballParams.x}, ${ballParams.y}, ${ballParams.vx}, ${ballParams.vy})`)
+                ballParams.vy *= -1;
+            }
+            // check for bounce off bottom wall
+            if (ballParams.y >= GameEnv.FieldHeight - GameEnv.BallSize) {
+                console.log(`BOTTOM WALL: BALL:(${ballParams.x}, ${ballParams.y}, ${ballParams.vx}, ${ballParams.vy})`)
+                ballParams.vy *= -1;
+            }
+            ballParams.x += ballParams.vx;
+            ballParams.y += ballParams.vy;
+            setBallParams({...ballParams});
+            setScore({...score});
+        };
+
         const keyPress = (key: KeyboardEvent) => {
             console.log(`Key pressed: ${key.code}`)
             switch (key.code) {
@@ -96,11 +104,38 @@ export default function App() {
                 }
             }
         }
-        document.addEventListener("keydown", keyPress);
-        setInterval(gameLoop, 20);
-        return () => {};
-    }, []);
 
+        const updateTimer = () => {
+            seconds.val += seconds.incr;
+            if (seconds.val >= 60) {
+                minutes.val += minutes.incr;
+                seconds.val = 0;
+            }
+            setSeconds({...seconds});
+            setMinutes({...minutes});
+        };
+
+        document.addEventListener("keydown", keyPress);
+        let gameLoopId = setInterval(gameLoop, 1000/GameEnv.BallV);
+        let timerId = setInterval(updateTimer, 1000);
+        return () => {
+            clearInterval(gameLoopId);
+            clearInterval(timerId);
+        };
+    }, [gameStarted]);
+
+    const startBtn = () => {
+        console.log(`${gameStarted ? "restart" : "start"} clicked`);
+        // if game is started, this is a restart button
+        if (gameStarted) {
+            document.location.reload();
+        }
+        setGameStarted(!gameStarted);
+    }
+    const pauseBtn = () => {
+        console.log(`${pause ? "unpause" : "pause"} clicked`);
+        setPause(!pause);
+    }
     return (
         <div className="App">
             <div>
@@ -112,6 +147,11 @@ export default function App() {
             <div style={{textAlign: "center"}}>
                 {score.leftPlayer} : {score.rightPlayer}
             </div>
+            <div style={{textAlign: "center"}}>
+                {minutes.val < 10 ? `0${minutes.val}` : minutes.val}:{seconds.val < 10 ? `0${seconds.val}` : seconds.val}
+            </div>
+            <button onClick={startBtn}>{gameStarted ? "Restart" : "Start"}</button>
+            <button onClick={pauseBtn}>{pause ? "Unpause" : "Pause"}</button>
         </div>
     );
 }
