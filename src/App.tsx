@@ -111,6 +111,7 @@ export const App = () => {
         let gameLoopId = setInterval(gameLoop, 1000/GameEnv.BallV);
         let timerId = setInterval(updateTimer, 1000);
         return () => {
+            document.removeEventListener("keydown", keyPress);
             clearInterval(gameLoopId);
             clearInterval(timerId);
         };
